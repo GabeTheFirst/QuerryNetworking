@@ -31,6 +31,6 @@ for example:
 [Get("/api/set/{var}/to/{var}")]
 public void ExplainVars(string Var1, string SecondVar)
 {
-  return "haha you just tried to set " + Var1 + " to " + SecondVar + "!"
+  return "haha you just tried to set " + Var1 + " to " + SecondVar + "!";
 }
 ```
