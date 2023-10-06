@@ -4,6 +4,7 @@ using System.Linq;
 using System.Net;
 using System.Reflection;
 using System.Text;
+using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace QuerryNetworking.Core
@@ -154,24 +155,27 @@ namespace QuerryNetworking.Core
                     Found = true;
 
 
-
+                    object Instance = Activator.CreateInstance(item.Method.DeclaringType);
+                    if(Instance.GetType().IsSubclassOf(typeof(ClientRequest)))
+                    {
+                        ((ClientRequest)Instance).Context = context;
+                    }
 
                     // check the return type
                     if (ReturnType == typeof(string))
                     {
                         // if it returns a string then convert the string to bytes
-                        Result = System.Text.Encoding.UTF8.GetBytes((string)item.Method.Invoke(Activator.CreateInstance(item.Method.DeclaringType), Vars));
+                        Result = System.Text.Encoding.UTF8.GetBytes((string)item.Method.Invoke(Instance, Vars));
                     }
                     else if (ReturnType == typeof(byte[]))
                     {
                         // if it returns a byte array then just return that byte array
-                        Result = (byte[])item.Method.Invoke(Activator.CreateInstance(item.Method.DeclaringType), Vars);
+                        Result = (byte[])item.Method.Invoke(Instance, Vars);
                     }
                     else
                     {
-                        // no other return types are supported yet! I probably can do it more easily once I add the data system (or decide to just use JSON)
-                        Result = System.Text.Encoding.UTF8.GetBytes("The requested API has an invalid return type! (this is not user error, it's an error in the api server.) Status code: 500");
-                        context.Response.StatusCode = 500;
+                        // serialize as JSON
+                        Result = System.Text.Encoding.UTF8.GetBytes(JsonSerializer.Serialize(item.Method.Invoke(Instance, Vars)));
                     }
                 }
             }
