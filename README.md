@@ -1,5 +1,5 @@
 # Querry Networking
-I an once again making a random online game (called Querry), but I decided instead of just making another server, I would just make some kind of framework for creating servers
+I am once again making a random online game (called Querry), but I decided instead of just making another server, I would just make some kind of framework for creating servers
 
 There isn't too many features yet and it's all a little Goofy, but here's how to use it:
 
