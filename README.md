@@ -24,13 +24,13 @@ internal class Program
 
 then the server should start when you run the app!
 
-to add a request you just need to add the Get Attribute to your function like ```[Get("/api/Goofy")]```, and make sure it returns a string or a byte[]   (for now!)
+to add a request you just need to add the Get Attribute to your function like ```[Get("/api/Goofy")]```, and make sure it returns something that can be JSON serialized
 
 if you make part of your url {var} like ```[Get("/api/set/{var}/to/{var}")]``` or something, it will pass that many strings into the function, so that function needs to take in two strings
 for example:
 ```
 [Get("/api/set/{var}/to/{var}")]
-public void ExplainVars(string Var1, string SecondVar)
+public string ExplainVars(string Var1, string SecondVar)
 {
   return "haha you just tried to set " + Var1 + " to " + SecondVar + "!";
 }
