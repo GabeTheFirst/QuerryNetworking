@@ -9,7 +9,12 @@ namespace QuerryNetworking.Data
 {
     // How data should probably look {string:"test",int:1,bool:true,list:["only","string","lists"]}
     // honestly I don't feel like making this right now, JSON it is!
+
+    // I did not end up doing anything like what's above, it's not even the same type of system
+    // sorry for no comments here!!
+
     // databases without asp.net are really dumb so I'm going to make some type of saving data system here, idk how good it will be
+    // ok it's probably not that good haha, but here it is! (so far)
     public static class DataManager
     {
         public static T ReadSingle<T>(string Member, string Value)
