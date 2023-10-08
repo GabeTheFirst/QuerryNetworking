@@ -74,7 +74,7 @@ namespace QuerryNetworking.Core
             }
         }
 
-        public static void ProcessRequest(object o)
+        public static async void ProcessRequest(object o)
         {
             // convert the object (o) bacl to an HttpListenerContext
             HttpListenerContext context = o as HttpListenerContext;
@@ -172,8 +172,17 @@ namespace QuerryNetworking.Core
                         // if it returns a byte array then just return that byte array
                         Result = (byte[])item.Method.Invoke(Instance, Vars);
                     }
+                    else if (ReturnType.ToString().Contains("System.Threading.Tasks.Task"))
+                    {
+                        Console.WriteLine("Is a task!");
+                        Task t = (Task)item.Method.Invoke(Instance, Vars);
+                        await t.ConfigureAwait(false);
+                        
+                        Result = System.Text.Encoding.UTF8.GetBytes(JsonSerializer.Serialize((object)((dynamic)t).Result));
+                    }
                     else
                     {
+                        Console.WriteLine(ReturnType);
                         // serialize as JSON
                         Result = System.Text.Encoding.UTF8.GetBytes(JsonSerializer.Serialize(item.Method.Invoke(Instance, Vars)));
                     }
