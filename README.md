@@ -38,4 +38,10 @@ public string ExplainVars(string Var1, string SecondVar)
 
 you can also make a POST request by making it ```[Post("api")]```
 
-if you want the HttpListenerContext you can, will update this document soon
+If you want the HttpListenerContext, you can use RequestBase, like
+```
+public class Api : RequestBase
+{
+
+}
+```
