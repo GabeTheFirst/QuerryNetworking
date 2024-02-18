@@ -7,45 +7,69 @@ using System.Threading.Tasks;
 
 namespace QuerryNetworking.Data
 {
+    // I am not done commenting in here!
     public static class QuerryData
     {
+        // convert data from a class to a string! (except if they use lists for now)
         public static string Convert<T>(T Original)
         {
+            // the string that is returned
             string Data = "";
+
+            // foreach property in the original data
             foreach(var item in Original.GetType().GetProperties())
             {
-                Console.WriteLine(item.Name);
+                // if it's a primitive, string, can't be written, or is an enum, use this
                 if (item.PropertyType.IsPrimitive || item.PropertyType == typeof(string) || !item.CanWrite || item.PropertyType.IsEnum)
                 {
+                    // the value
                     object VALUE = Original.GetType().GetProperty(item.Name).GetValue(Original);
+                    
+                    // if the value is not null
                     if(VALUE != null)
                     {
+                        // add the value into the string
                         Data += item.Name + ":" + VALUE.ToString() + "|";
                     }
                     else
                     {
+                        // add null
                         Data += item.Name + ":" + "null" + "|";
                     }
                 }
                 else
                 {
+                    // "Goof" is the type of the current item we are looking at
                     Type Goof = item.PropertyType;
+
+                    // the method to convert it 
                     var ConvertMethod = typeof(QuerryData).GetMethod(nameof(QuerryData.Convert));
+                    
+                    // that method but generic
                     var NewRef = ConvertMethod.MakeGenericMethod(Goof);
+
+                    // the value of the property
                     object VALUE = Original.GetType().GetProperty(item.Name).GetValue(Original);
+
+                    // if it's not null, add the value into the string
                     if(VALUE != null)
                     {
+                        // use the convert method to convert the object to a string
                         string S = (string)NewRef.Invoke(null, new object?[1] { VALUE });
 
+                        // actually add it to the string
                         Data += item.Name + ":" + "{" + S + "}" + "|";
                     }
                     else
                     {
+                        // add null to the string
                         Data += item.Name + ":" + "null" + "|";
                     }
                 }
             }
+            // remove the final "|"
             Data = Data.TrimEnd('|');
+            // return the resulting data
             return Data;
         }
 
