@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Reflection;
+using System.Security.Cryptography;
 
 namespace QuerryNetworking.Data
 {
@@ -41,7 +42,7 @@ namespace QuerryNetworking.Data
                     //Console.WriteLine(CurrentMember + " vs " + Member + " and " + item + " vs " + Value);
                     if (CurrentMember == Member && item == Value)
                     {
-                        Console.WriteLine("Member found!");
+                        //Console.WriteLine("Member found!");
                         MemberAtValue = MemberAt;
                     }
                 }
@@ -54,7 +55,7 @@ namespace QuerryNetworking.Data
                 MemberAt++;
             }
 
-            Console.WriteLine("The member is at: " + MemberAtValue);
+            //Console.WriteLine("The member is at: " + MemberAtValue);
             MemberAt = 0;
             InValid = false;
 
@@ -75,7 +76,7 @@ namespace QuerryNetworking.Data
                 {
                     if (MemberAtValue == MemberAt)
                     {
-                        Console.WriteLine("setting " + CurrentMember + " to " + item);
+                        //Console.WriteLine("setting " + CurrentMember + " to " + item);
                         Type Goof = o.GetType().GetProperty(CurrentMember).PropertyType;
                         object NewO = Convert.ChangeType(item, Goof);
                         o.GetType().GetProperty(CurrentMember).SetValue(o, NewO);
@@ -188,7 +189,7 @@ namespace QuerryNetworking.Data
                 }
                 if (InValid && f[i] == "END")
                 {
-                    Console.WriteLine(f[i] + " to " + NewInstance.GetType().GetProperty(CurrentMember).GetValue(NewInstance).ToString());
+                    //Console.WriteLine(f[i] + " to " + NewInstance.GetType().GetProperty(CurrentMember).GetValue(NewInstance).ToString());
                     f.Insert(i, NewInstance.GetType().GetProperty(CurrentMember).GetValue(NewInstance).ToString());
                     i++;
                     Count++;
@@ -201,7 +202,7 @@ namespace QuerryNetworking.Data
             string NewString = "";
             foreach(var item in f)
             {
-                Console.WriteLine(item);
+                //Console.WriteLine(item);
                 NewString += item;
                 NewString += Environment.NewLine;
             }
@@ -213,7 +214,16 @@ namespace QuerryNetworking.Data
 
         public static async Task<T> UpdateSingle<T>(string Member, string Value, T NewInstance)
         {
-            List<string> f = File.ReadAllLines(Directory.GetCurrentDirectory() + "/" + typeof(T).Name + ".qd").ToList();
+            List<string> f = new List<string>();
+            try
+            {
+                f = (await File.ReadAllLinesAsync(Directory.GetCurrentDirectory() + "/" + typeof(T).Name + ".qd")).ToList();
+            }
+            catch
+            {
+                Console.WriteLine("[FAILED TO UPDATE FILE]");
+                return default(T);
+            }
             int MemberAt = 0;
             string CurrentMember = "";
             int MemberAtValue = 0;
@@ -236,7 +246,7 @@ namespace QuerryNetworking.Data
                     //Console.WriteLine(CurrentMember + " vs " + Member + " and " + item + " vs " + Value);
                     if (CurrentMember == Member && item == Value)
                     {
-                        Console.WriteLine("Member found!");
+                        //Console.WriteLine("Member found!");
                         MemberAtValue = MemberAt;
                     }
                 }
@@ -249,7 +259,7 @@ namespace QuerryNetworking.Data
                 MemberAt++;
             }
 
-            Console.WriteLine("The member is at: " + MemberAtValue);
+            //Console.WriteLine("The member is at: " + MemberAtValue);
             MemberAt = 0;
             InValid = false;
 
@@ -288,7 +298,13 @@ namespace QuerryNetworking.Data
                 NewString += Environment.NewLine;
             }
 
-            await File.WriteAllTextAsync(Directory.GetCurrentDirectory() + "/" + typeof(T).Name + ".qd", NewString);
+            using (FileStream fs = File.OpenWrite(Directory.GetCurrentDirectory() + "/" + typeof(T).Name + ".qd"))
+            {
+                byte[] Data = Encoding.UTF8.GetBytes(NewString);
+                fs.WriteAsync(Data, 0, Data.Length);
+                fs.Close();
+            }
+
 
             return NewInstance;
         }

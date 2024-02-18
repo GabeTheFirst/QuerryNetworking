@@ -1,4 +1,5 @@
-﻿using System;
+﻿using QuerryNetworking.Data;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
@@ -22,6 +23,11 @@ namespace QuerryNetworking.Core
         {
             Console.WriteLine("Setting up...");
 
+            if(Settings.DataType == null)
+            {
+                Settings.DataType = QuerryDataType.Json;
+            }
+
             // make sure the requests list isn't null
             Requests = new List<RequestBase>();
 
@@ -42,13 +48,42 @@ namespace QuerryNetworking.Core
                     // add a / to the start if it doesn't already have one, just for ease of use
                     url = "/" + url;
                 }
-                Console.WriteLine("Registering Request: " + url);
+                Console.WriteLine("[GET] Registering Request: " + url);
 
                 // add to the list of valid requests, and add the method to the attribute
                 Requests.Add(new RequestBase()
                 {
                     Url = url,
-                    Method = item.GetCustomAttribute<GetAttribute>().GetResult = item
+                    Method = item.GetCustomAttribute<GetAttribute>().GetResult = item,
+                    HttpMethod = QuerryHttpMethod.GET
+                });
+            }
+
+            // find every function that has the Post Attribute (idk if this is the best way of doing that haha)
+            var Posts = Assembly.GetEntryAssembly().GetTypes()
+                      .SelectMany(t => t.GetMethods())
+                      .Where(m => m.GetCustomAttribute(typeof(PostAttribute)) != null);
+
+            // for each request in the array just got
+            foreach (var item in Posts)
+            {
+                // get the url so we can modify it
+                string url = item.GetCustomAttribute<PostAttribute>().Url;
+
+
+                if (!url.StartsWith("/"))
+                {
+                    // add a / to the start if it doesn't already have one, just for ease of use
+                    url = "/" + url;
+                }
+                Console.WriteLine("[POST] Registering Request: " + url);
+
+                // add to the list of valid requests, and add the method to the attribute
+                Requests.Add(new RequestBase()
+                {
+                    Url = url,
+                    Method = item.GetCustomAttribute<PostAttribute>().GetResult = item,
+                    HttpMethod = QuerryHttpMethod.POST
                 });
             }
 
@@ -178,13 +213,29 @@ namespace QuerryNetworking.Core
                         Task t = (Task)item.Method.Invoke(Instance, Vars);
                         await t.ConfigureAwait(false);
                         
-                        Result = System.Text.Encoding.UTF8.GetBytes(JsonSerializer.Serialize((object)((dynamic)t).Result));
+                        switch(Settings.DataType)
+                        {
+                            case QuerryDataType.Json:
+                                Result = System.Text.Encoding.UTF8.GetBytes(JsonSerializer.Serialize((object)((dynamic)t).Result));
+                                break;
+                            case QuerryDataType.QuerryData:
+                                Result = System.Text.Encoding.UTF8.GetBytes(QuerryData.Convert((object)((dynamic)t).Result));
+                                break;
+                        }
                     }
                     else
                     {
                         Console.WriteLine(ReturnType);
                         // serialize as JSON
-                        Result = System.Text.Encoding.UTF8.GetBytes(JsonSerializer.Serialize(item.Method.Invoke(Instance, Vars)));
+                        switch(Settings.DataType)
+                        {
+                            case QuerryDataType.Json:
+                                Result = System.Text.Encoding.UTF8.GetBytes(JsonSerializer.Serialize(item.Method.Invoke(Instance, Vars)));
+                                break;
+                            case QuerryDataType.QuerryData:
+                                Result = System.Text.Encoding.UTF8.GetBytes(QuerryData.Convert(item.Method.Invoke(Instance, Vars)));
+                                break;
+                        }
                     }
                 }
             }
