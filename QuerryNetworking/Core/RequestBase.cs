@@ -11,5 +11,11 @@ namespace QuerryNetworking.Core
     {
         public string Url { get; set; }
         public MethodInfo Method { get; set; }
+        public QuerryHttpMethod HttpMethod { get; set; }
+    }
+    public enum QuerryHttpMethod
+    {
+        GET,
+        POST
     }
 }
