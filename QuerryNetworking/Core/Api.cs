@@ -12,13 +12,13 @@ namespace QuerryNetworking.Core
     public static class Api
     {
         // all requests that are valid
-        public static List<RequestBase> Requests;
+        static List<RequestBase> Requests;
         
         // the HttpListener used to get requests
-        public static HttpListener Listener;
+        static HttpListener Listener;
 
         // set up the server so it can be started correctly
-        public static void SetupBase()
+        static void SetupBase()
         {
             Console.WriteLine("Setting up...");
 
@@ -62,6 +62,10 @@ namespace QuerryNetworking.Core
         public static void StartServer()
         {
             Console.WriteLine("starting...");
+
+            // setup the base
+            SetupBase();
+
             // start the server
             Listener.Start();
             Console.WriteLine("Started! Listening on: " + ServerData.BaseUrl);
