@@ -191,7 +191,7 @@ namespace QuerryNetworking.Core
                 ItemUrl = ItemUrl.Substring(1);
 
                 // if the urls match
-                if (ItemUrl == Url)
+                if (ItemUrl == Url.Split("?")[0])
                 {
                     // the Type that the method returns
                     Type ReturnType = item.Method.ReturnType;
