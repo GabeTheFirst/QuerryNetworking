@@ -7,6 +7,7 @@ using System.Net;
 using System.Reflection;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
 namespace QuerryNetworking.Core
@@ -20,15 +21,24 @@ namespace QuerryNetworking.Core
         static HttpListener Listener;
 
         // set up the server so it can be started correctly
-        static void SetupBase()
+        static void SetupBase(string[]? Namespaces = null)
         {
             Log.Info("Setting up...");
 
             // make sure the requests list isn't null
             Requests = new List<RequestBase>();
 
+
+            var Types = Assembly.GetEntryAssembly().GetTypes();
+
+            if(Namespaces != null)
+            {
+                Log.Debug("Requests in namespace: " + JsonSerializer.Serialize(Namespaces));
+                Types = Types.Where(A => Namespaces.Any(B => B == A.Namespace)).ToArray();
+            }
+
             // find every function that has the Get Attribute (idk if this is the best way of doing that haha)
-            var Gets = Assembly.GetEntryAssembly().GetTypes()
+            var Gets = Types
                       .SelectMany(t => t.GetMethods())
                       .Where(m => m.GetCustomAttribute(typeof(GetAttribute)) != null);
 
@@ -56,7 +66,7 @@ namespace QuerryNetworking.Core
             }
 
             // find every function that has the Post Attribute (idk if this is the best way of doing that haha)
-            var Posts = Assembly.GetEntryAssembly().GetTypes()
+            var Posts = Types
                       .SelectMany(t => t.GetMethods())
                       .Where(m => m.GetCustomAttribute(typeof(PostAttribute)) != null);
 
@@ -90,12 +100,12 @@ namespace QuerryNetworking.Core
             Log.Complete("Finished setting up!");
         }
 
-        public static void StartServer()
+        public static void StartServer(string[]? Namespaces = null)
         {
             Log.Info("starting...");
 
             // setup the base
-            SetupBase();
+            SetupBase(Namespaces);
 
             // start the server
             Listener.Start();
