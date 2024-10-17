@@ -76,7 +76,6 @@ namespace QuerryNetworking.Data
                 {
                     if (MemberAtValue == MemberAt)
                     {
-                        //Console.WriteLine("setting " + CurrentMember + " to " + item);
                         Type Goof = o.GetType().GetProperty(CurrentMember).PropertyType;
                         object NewO = Convert.ChangeType(item, Goof);
                         o.GetType().GetProperty(CurrentMember).SetValue(o, NewO);
@@ -103,7 +102,7 @@ namespace QuerryNetworking.Data
             int MemberAt = 0;
             string CurrentMember = "";
             List<int> MemberAtValues = new List<int>();
-            object o = Activator.CreateInstance(typeof(T));
+            object? o = Activator.CreateInstance(typeof(T));
             bool InValid = false;
             foreach (var item in f)
             {

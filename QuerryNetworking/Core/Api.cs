@@ -1,4 +1,5 @@
 ﻿using QuerryNetworking.Data;
+using QuerryNetworking.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -21,12 +22,7 @@ namespace QuerryNetworking.Core
         // set up the server so it can be started correctly
         static void SetupBase()
         {
-            Console.WriteLine("Setting up...");
-
-            if(Settings.DataType == null)
-            {
-                Settings.DataType = QuerryDataType.Json;
-            }
+            Log.Info("Setting up...");
 
             // make sure the requests list isn't null
             Requests = new List<RequestBase>();
@@ -48,7 +44,7 @@ namespace QuerryNetworking.Core
                     // add a / to the start if it doesn't already have one, just for ease of use
                     url = "/" + url;
                 }
-                Console.WriteLine("[GET] Registering Request: " + url);
+                Log.Debug("[GET] Registering Request: " + url);
 
                 // add to the list of valid requests, and add the method to the attribute
                 Requests.Add(new RequestBase()
@@ -76,7 +72,7 @@ namespace QuerryNetworking.Core
                     // add a / to the start if it doesn't already have one, just for ease of use
                     url = "/" + url;
                 }
-                Console.WriteLine("[POST] Registering Request: " + url);
+                Log.Debug("[POST] Registering Request: " + url);
 
                 // add to the list of valid requests, and add the method to the attribute
                 Requests.Add(new RequestBase()
@@ -91,19 +87,19 @@ namespace QuerryNetworking.Core
             Listener = new HttpListener();
             // add the url to the prefixes
             Listener.Prefixes.Add(ServerData.BaseUrl);
-            Console.WriteLine("Finished setting up!");
+            Log.Complete("Finished setting up!");
         }
 
         public static void StartServer()
         {
-            Console.WriteLine("starting...");
+            Log.Info("starting...");
 
             // setup the base
             SetupBase();
 
             // start the server
             Listener.Start();
-            Console.WriteLine("Started! Listening on: " + ServerData.BaseUrl);
+            Log.Complete("Started! Listening on: " + ServerData.BaseUrl);
             while (true)
             {
                 // get the HttpListenerContext
@@ -128,7 +124,7 @@ namespace QuerryNetworking.Core
             string Url = context.Request.RawUrl;
 
             // log the request received, might remove this for performance
-            Console.WriteLine("Request for: " + Url);
+            Log.Debug("Request for: " + Url);
 
             // check the valid requests to find the matching one
             foreach (var item in Requests)
