@@ -95,8 +95,8 @@ namespace QuerryNetworking.Logging
             Logging = true;
             for(int i = 0; i < LogQueue.Count; i++)
             {
-                Console.ForegroundColor = LogQueue[i].Color;
-                Console.WriteLine(LogQueue[i].Message);
+                Console.ForegroundColor = LogQueue[0].Color;
+                Console.WriteLine(LogQueue[0].Message);
                 LogQueue.RemoveAt(0);
             }
             Console.ForegroundColor = ConsoleColor.White;
