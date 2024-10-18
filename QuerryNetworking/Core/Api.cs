@@ -7,9 +7,11 @@ using System.Linq;
 using System.Net;
 using System.Reflection;
 using System.Text;
+using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
+using System.Web;
 
 namespace QuerryNetworking.Core
 {
@@ -206,7 +208,7 @@ namespace QuerryNetworking.Core
                     {
                         ((ClientRequest)Instance).Context = context;
 
-                        if(context.Request.ContentType == "multipart/form-data")
+                        if(context.Request.ContentType == "application/x-www-form-urlencoded")
                         {
                             ((ClientRequest)Instance).Form = ReadFormPost(((ClientRequest)Instance).GetPostString());
                         }
@@ -292,7 +294,8 @@ namespace QuerryNetworking.Core
                 foreach (string Item in Items)
                 {
                     string[] ItemValue = Item.Split('=');
-                    Collection.Add(ItemValue[0], ItemValue[1]);
+                    
+                    Collection.Add(ItemValue[0], Uri.EscapeDataString(ItemValue[1]));
                 }
                 return Collection;
             }
