@@ -295,7 +295,7 @@ namespace QuerryNetworking.Core
                 {
                     string[] ItemValue = Item.Split('=');
                     
-                    Collection.Add(ItemValue[0], Uri.EscapeDataString(ItemValue[1]));
+                    Collection.Add(ItemValue[0], Uri.UnescapeDataString(ItemValue[1]));
                 }
                 return Collection;
             }

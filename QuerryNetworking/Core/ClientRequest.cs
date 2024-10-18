@@ -22,5 +22,16 @@ namespace QuerryNetworking.Core
                 }
             }
         }
+
+        public byte[] GetPostBytes()
+        {
+            using (Stream body = Context.Request.InputStream)
+            {
+                MemoryStream destination = new MemoryStream();
+                body.CopyTo(destination);
+                byte[] Data = destination.ToArray();
+                return Data;
+            }
+        }
     }
 }
