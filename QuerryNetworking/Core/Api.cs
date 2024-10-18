@@ -134,7 +134,7 @@ namespace QuerryNetworking.Core
             string Url = context.Request.RawUrl;
 
             // log the request received, might remove this for performance
-            Log.Debug("Request for: " + Url);
+            Log.Info("Request for: " + Url);
 
             // check the valid requests to find the matching one
             foreach (var item in Requests)
@@ -219,11 +219,16 @@ namespace QuerryNetworking.Core
                     }
                     else if (ReturnType.ToString().Contains("System.Threading.Tasks.Task"))
                     {
-                        Console.WriteLine("Is a task!");
                         Task t = (Task)item.Method.Invoke(Instance, Vars);
                         await t.ConfigureAwait(false);
-                        
-                        switch(Settings.DataType)
+
+                        if (context.Request.IsWebSocketRequest)
+                        {
+                            // should be handled in the app that receives the request 🙏 (maybe I'll add full websocket support here eventually)
+                            return;
+                        }
+
+                        switch (Settings.DataType)
                         {
                             case QuerryDataType.Json:
                                 Result = System.Text.Encoding.UTF8.GetBytes(JsonSerializer.Serialize((object)((dynamic)t).Result));
@@ -235,8 +240,8 @@ namespace QuerryNetworking.Core
                     }
                     else
                     {
-                        Console.WriteLine(ReturnType);
-                        // serialize as JSON
+                        Log.Debug("Returning Type: " + ReturnType);
+                        // serialize
                         switch(Settings.DataType)
                         {
                             case QuerryDataType.Json:
@@ -248,6 +253,12 @@ namespace QuerryNetworking.Core
                         }
                     }
                 }
+            }
+
+            if (context.Request.IsWebSocketRequest)
+            {
+                // should be handled in the app that receives the request 🙏 (maybe I'll add full websocket support here eventually)
+                return;
             }
 
             // if it's a 404
