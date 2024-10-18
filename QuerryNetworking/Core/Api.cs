@@ -2,6 +2,7 @@
 using QuerryNetworking.Logging;
 using System;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.Linq;
 using System.Net;
 using System.Reflection;
@@ -204,6 +205,11 @@ namespace QuerryNetworking.Core
                     if(Instance.GetType().IsSubclassOf(typeof(ClientRequest)))
                     {
                         ((ClientRequest)Instance).Context = context;
+
+                        if(context.Request.ContentType == "multipart/form-data")
+                        {
+                            ((ClientRequest)Instance).Form = ReadFormPost(((ClientRequest)Instance).GetPostString());
+                        }
                     }
 
                     // check the return type
@@ -275,6 +281,26 @@ namespace QuerryNetworking.Core
             context.Response.OutputStream.Write(Result, 0, Result.Length);
             // close
             context.Response.Close();
+        }
+
+        static NameValueCollection? ReadFormPost(string POST)
+        {
+            try
+            {
+                NameValueCollection Collection = new NameValueCollection();
+                string[] Items = POST.Split("&");
+                foreach (string Item in Items)
+                {
+                    string[] ItemValue = Item.Split('=');
+                    Collection.Add(ItemValue[0], ItemValue[1]);
+                }
+                return Collection;
+            }
+            catch
+            {
+                Log.Error("Invalid form data! X3");
+                return null;
+            }
         }
     }
 }

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.Linq;
 using System.Net;
 using System.Text;
@@ -10,6 +11,7 @@ namespace QuerryNetworking.Core
     public class ClientRequest
     {
         public HttpListenerContext Context;
+        public NameValueCollection? Form;
         public string GetPostString()
         {
             using (Stream body = Context.Request.InputStream)

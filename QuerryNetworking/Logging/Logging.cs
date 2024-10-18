@@ -93,7 +93,7 @@ namespace QuerryNetworking.Logging
                 return;
             }
             Logging = true;
-            for(int i = 0; i < LogQueue.Count; i++)
+            while(LogQueue.Count > 0)
             {
                 Console.ForegroundColor = LogQueue[0].Color;
                 Console.WriteLine(LogQueue[0].Message);
