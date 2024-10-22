@@ -15,16 +15,16 @@ using System.Web;
 
 namespace QuerryNetworking.Core
 {
-    public static class Api
+    public class Api
     {
         // all requests that are valid
-        static List<RequestBase> Requests;
-        
+        List<RequestBase>? Requests;
+
         // the HttpListener used to get requests
-        static HttpListener Listener;
+        HttpListener Listener = new HttpListener();
 
         // set up the server so it can be started correctly
-        static void SetupBase(string[]? Namespaces = null)
+        void SetupBase(string[]? Namespaces = null)
         {
             Log.Info("Setting up...");
 
@@ -103,8 +103,35 @@ namespace QuerryNetworking.Core
             Log.Complete("Finished setting up!");
         }
 
-        public static void StartServer(string[]? Namespaces = null)
+        public ServerData ServerData = new ServerData();
+
+        public event Events.RequestEvent? OnRequest;
+
+        public Api(string Url)
         {
+            this.ServerData.BaseUrl = Url;
+            Log = new Log("");
+        }
+
+        public Api()
+        {
+            Log = new Log("");
+        }
+
+        Log Log;
+
+        public string ServerId = Guid.NewGuid().ToString();
+
+        public void StartServer(string[]? Namespaces = null, string? CompleteMessage = null, string? ServerId = null)
+        {
+
+            if(!string.IsNullOrEmpty(ServerId))
+            {
+                this.ServerId = ServerId;
+            }
+
+            Log = new Log(this.ServerId);
+
             Log.Info("starting...");
 
             // setup the base
@@ -113,16 +140,38 @@ namespace QuerryNetworking.Core
             // start the server
             Listener.Start();
             Log.Complete("Started! Listening on: " + ServerData.BaseUrl);
+            Log.Debug("Server id: " + ServerId);
+            if (!string.IsNullOrEmpty(CompleteMessage))
+            {
+                Console.ForegroundColor = ConsoleColor.Cyan;
+                Console.WriteLine(CompleteMessage);
+                Console.ForegroundColor = ConsoleColor.White;
+            }
             while (true)
             {
-                // get the HttpListenerContext
-                HttpListenerContext context = Listener.GetContext();
-                // queue process request to run on a different thread
-                ThreadPool.QueueUserWorkItem(ProcessRequest, context);
+                try
+                {
+                    // get the HttpListenerContext
+                    HttpListenerContext context = Listener.GetContext();
+                    // queue process request to run on a different thread
+                    ThreadPool.QueueUserWorkItem(ProcessRequest, context);
+                }
+                catch(HttpListenerException Ex)
+                {
+                    if(Ex.ErrorCode == 995)
+                    {
+                        Log.Warn($"Server [{ServerId}] is offline, listening was aborted.");
+                    }
+                    else
+                    {
+                        Log.Error($"Server [{ServerId}] has CRASHED!");
+                    }
+                    return;
+                }
             }
         }
 
-        public static async void ProcessRequest(object o)
+        public async void ProcessRequest(object o)
         {
             // convert the object (o) bacl to an HttpListenerContext
             HttpListenerContext context = o as HttpListenerContext;
@@ -136,11 +185,17 @@ namespace QuerryNetworking.Core
             // the url from the request
             string Url = context.Request.RawUrl;
 
-            // log the request received, might remove this for performance
-            Log.Info("Request for: " + Url);
+            string? OgUrl = Url;
+            Url = Url.Split("?")[0];
+
+            QuerryHttpMethod Method = QuerryHttpMethod.GET;
+            if(context.Request.HttpMethod == "POST")
+            {
+                Method = QuerryHttpMethod.POST;
+            }
 
             // check the valid requests to find the matching one
-            foreach (var item in Requests)
+            foreach (var item in Requests.Where(A => A.HttpMethod == Method))
             {
                 // the url of the current request it's checking
                 string ItemUrl = item.Url;
@@ -207,11 +262,11 @@ namespace QuerryNetworking.Core
                     if(Instance.GetType().IsSubclassOf(typeof(ClientRequest)))
                     {
                         ((ClientRequest)Instance).Context = context;
-
                         if(context.Request.ContentType == "application/x-www-form-urlencoded")
                         {
                             ((ClientRequest)Instance).Form = ReadFormPost(((ClientRequest)Instance).GetPostString());
                         }
+                        ((ClientRequest)Instance).Server = this;
                     }
 
                     // check the return type
@@ -260,11 +315,14 @@ namespace QuerryNetworking.Core
                                 break;
                         }
                     }
+                    break;
                 }
             }
 
             if (context.Request.IsWebSocketRequest)
             {
+                // log the request received, might remove this for performance
+                Log.Info("websocket Request for: " + Url);
                 // should be handled in the app that receives the request 🙏 (maybe I'll add full websocket support here eventually)
                 return;
             }
@@ -283,9 +341,28 @@ namespace QuerryNetworking.Core
             context.Response.OutputStream.Write(Result, 0, Result.Length);
             // close
             context.Response.Close();
+
+            // log the request received, might remove this for performance
+            Log.Info("Request for: " + OgUrl + " - " + context.Request.HttpMethod + " - " + context.Response.StatusCode);
+
+            if (OnRequest != null)
+            {
+                OnRequest.Invoke(OgUrl, this, context.Response.StatusCode);
+            }
         }
 
-        static NameValueCollection? ReadFormPost(string POST)
+        public void Stop()
+        {
+            if(Listener == null)
+            {
+                Log.Warn("Listener was NULL! Cannot stop a listener that doesn't exist");
+                return;
+            }    
+            Listener.Stop();
+            Listener.Close();
+        }
+
+        NameValueCollection? ReadFormPost(string POST)
         {
             try
             {

@@ -1,16 +1,23 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace QuerryNetworking.Logging
 {
-    public static class Log
+    public class Log
     {
         public static LogLevel LogLevel;
         static List<LogEntry> LogQueue = new List<LogEntry>();
-        public static void Debug(string Message)
+        public Log(string Id)
+        {
+            ServerId = Id;
+        }
+
+        string ServerId = "";
+        public void Debug(string Message)
         {
             if (LogLevel < LogLevel.Debug)
             {
@@ -20,12 +27,12 @@ namespace QuerryNetworking.Logging
             LogQueue.Add(new LogEntry()
             {
                 Color = ConsoleColor.DarkGray,
-                Message = "[QuerryNetworking] {debug} " + Message
+                Message = $"[{ServerId}] {{debug}} " + Message
             });
             WriteQueue();
         }
 
-        public static void Complete(string Message)
+        public void Complete(string Message)
         {
             if (LogLevel < LogLevel.Info)
             {
@@ -35,12 +42,12 @@ namespace QuerryNetworking.Logging
             LogQueue.Add(new LogEntry()
             {
                 Color = ConsoleColor.Green,
-                Message = "[QuerryNetworking] {complete} " + Message
+                Message = $"[{ServerId}] {{complete}} " + Message
             });
             WriteQueue();
         }
 
-        public static void Warn(string Message)
+        public void Warn(string Message)
         {
             if (LogLevel < LogLevel.Warn)
             {
@@ -50,12 +57,12 @@ namespace QuerryNetworking.Logging
             LogQueue.Add(new LogEntry()
             {
                 Color = ConsoleColor.Yellow,
-                Message = "[QuerryNetworking] {warn} " + Message
+                Message = $"[{ServerId}] {{warn}} " + Message
             });
             WriteQueue();
         }
 
-        public static void Error(string Message)
+        public void Error(string Message)
         {
             if (LogLevel < LogLevel.Error)
             {
@@ -65,12 +72,12 @@ namespace QuerryNetworking.Logging
             LogQueue.Add(new LogEntry()
             {
                 Color = ConsoleColor.Red,
-                Message = "[QuerryNetworking] {error} " + Message
+                Message = $"[{ServerId}] {{error}} " + Message
             });
             WriteQueue();
         }
 
-        public static void Info(string Message)
+        public void Info(string Message)
         {
             if (LogLevel < LogLevel.Info)
             {
@@ -80,7 +87,7 @@ namespace QuerryNetworking.Logging
             LogQueue.Add(new LogEntry()
             {
                 Color = ConsoleColor.White,
-                Message = "[QuerryNetworking] {info} " + Message
+                Message = $"[{ServerId}] {{info}} " + Message
             });
             WriteQueue();
         }
@@ -93,11 +100,27 @@ namespace QuerryNetworking.Logging
                 return;
             }
             Logging = true;
-            while(LogQueue.Count > 0)
+
+            while (LogQueue.Count > 0)
             {
-                Console.ForegroundColor = LogQueue[0].Color;
-                Console.WriteLine(LogQueue[0].Message);
-                LogQueue.RemoveAt(0);
+                LogEntry? Entry = null;
+                try
+                {
+                    if (LogQueue.Count > 0)
+                    {
+                        Entry = LogQueue[0];
+                        LogQueue.RemoveAt(0);
+                    }
+                    if (Entry == null)
+                        continue;
+                    Console.ForegroundColor = Entry.Color;
+                    Console.WriteLine(DateTime.Now.ToString("hh:mm tt") + " - " + Entry.Message);
+                }
+                catch
+                {
+                    Console.ForegroundColor = ConsoleColor.Red;
+                    Console.WriteLine(DateTime.Now.ToString("hh:mm tt") + " - log failure");
+                }
             }
             Console.ForegroundColor = ConsoleColor.White;
             Logging = false;

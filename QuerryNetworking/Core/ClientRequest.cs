@@ -12,6 +12,7 @@ namespace QuerryNetworking.Core
     {
         public HttpListenerContext Context;
         public NameValueCollection? Form;
+        public Api? Server;
         public string GetPostString()
         {
             using (Stream body = Context.Request.InputStream)

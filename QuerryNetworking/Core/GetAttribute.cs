@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Reflection;
 using System.Text;
@@ -13,7 +14,7 @@ namespace QuerryNetworking.Core
         // The URL for this method
         public string Url;
         // The method that returns the value to the client
-        public MethodInfo GetResult;
+        public MethodInfo? GetResult;
 
         public GetAttribute(string Url)
         {

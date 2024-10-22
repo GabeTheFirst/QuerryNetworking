@@ -6,8 +6,8 @@ using System.Threading.Tasks;
 
 namespace QuerryNetworking.Core
 {
-    public static class ServerData
+    public class ServerData
     {
-        public static string BaseUrl = "http://localhost:11234/";
+        public string BaseUrl = "http://localhost:11234/";
     }
 }
